@@ -49,16 +49,18 @@ if [ "$1" == "import" ]; then
         sudo -u postgres /usr/lib/postgresql/$PG_VERSION/bin/pg_ctl -D /data/database/postgres/ initdb -o "--locale C.UTF-8"
     fi
 
-    # Initialize PostgreSQL
-    createPostgresConfig
-    service postgresql start
-    sudo -u postgres createuser renderer
-    sudo -u postgres createdb -E UTF8 -O renderer gis
-    sudo -u postgres psql -d gis -c "CREATE EXTENSION postgis;"
-    sudo -u postgres psql -d gis -c "CREATE EXTENSION hstore;"
-    sudo -u postgres psql -d gis -c "ALTER TABLE geometry_columns OWNER TO renderer;"
-    sudo -u postgres psql -d gis -c "ALTER TABLE spatial_ref_sys OWNER TO renderer;"
-    setPostgresPassword
+    if [ "${INITPG:-}" == "enabled" ]; then
+        # Initialize PostgreSQL
+        createPostgresConfig
+        service postgresql start
+        sudo -u postgres createuser renderer
+        sudo -u postgres createdb -E UTF8 -O renderer gis
+        sudo -u postgres psql -d gis -c "CREATE EXTENSION postgis;"
+        sudo -u postgres psql -d gis -c "CREATE EXTENSION hstore;"
+        sudo -u postgres psql -d gis -c "ALTER TABLE geometry_columns OWNER TO renderer;"
+        sudo -u postgres psql -d gis -c "ALTER TABLE spatial_ref_sys OWNER TO renderer;"
+        setPostgresPassword
+    fi
 
     # Download Luxembourg as sample if no data is provided
     if [ ! -f /data/region.osm.pbf ] && [ -z "${DOWNLOAD_PBF:-}" ]; then
